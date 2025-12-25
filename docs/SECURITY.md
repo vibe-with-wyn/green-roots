@@ -462,22 +462,24 @@ The following features are prototypes with limited security:
 
 ## Reporting Security Issues
 
-If you discover a security vulnerability:
+If you discover a security vulnerability in Green Roots:
 
 1. **Do Not** open a public GitHub issue
-2. Contact the development team privately
+2. Contact me directly via email: [lapurawendel.dev@gmail.com]
 3. Provide detailed information:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
    - Suggested fix (if available)
 
-The team will:
-- Acknowledge receipt within 48 hours
+I will:
+- Acknowledge receipt as soon as possible
 - Investigate and confirm the issue
 - Develop and test a fix
 - Release a security patch
-- Credit the reporter (if desired)
+- Credit you as the reporter (if desired)
+
+**Note**: As a solo developer, response times may vary, but security issues are treated as high priority.
 
 ## Security Checklist
 

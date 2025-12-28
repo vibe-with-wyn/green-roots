@@ -88,14 +88,14 @@ try {
 
     // Fetch Planting History with Pagination and Date Filters
     if ($active_tab === 'planting') {
-        $query = "SELECT COUNT(*) FROM activities WHERE user_id = :user_id AND activity_type = 'submission'";
+        $query = "SELECT COUNT(*) FROM submissions WHERE user_id = :user_id";
         $params = ['user_id' => $user_id];
         if ($start_date) {
-            $query .= " AND created_at >= :start_date";
+            $query .= " AND submitted_at >= :start_date";
             $params['start_date'] = $start_date . ' 00:00:00';
         }
         if ($end_date) {
-            $query .= " AND created_at <= :end_date";
+            $query .= " AND submitted_at <= :end_date";
             $params['end_date'] = $end_date . ' 23:59:59';
         }
         $stmt = $pdo->prepare($query);
@@ -104,17 +104,20 @@ try {
         $planting_pages = ceil($planting_total / $entries_per_page);
 
         $query = "
-            SELECT activity_id, trees_planted, location, status, created_at 
-            FROM activities 
-            WHERE user_id = :user_id AND activity_type = 'submission'
+            SELECT s.submission_id, s.trees_planted, s.photo_data, s.latitude, s.longitude, 
+                   s.submitted_at, s.status, s.submission_notes, s.rejection_reason, s.flagged,
+                   b.name as barangay_name, b.city, b.province
+            FROM submissions s
+            LEFT JOIN barangays b ON s.barangay_id = b.barangay_id
+            WHERE s.user_id = :user_id
         ";
         if ($start_date) {
-            $query .= " AND created_at >= :start_date";
+            $query .= " AND s.submitted_at >= :start_date";
         }
         if ($end_date) {
-            $query .= " AND created_at <= :end_date";
+            $query .= " AND s.submitted_at <= :end_date";
         }
-        $query .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+        $query .= " ORDER BY s.submitted_at DESC LIMIT :limit OFFSET :offset";
         $stmt = $pdo->prepare($query);
         foreach ($params as $key => $value) {
             $stmt->bindValue(":$key", $value);
@@ -322,7 +325,7 @@ try {
                                         </div>
                                         <div class="history-detail-item">
                                             <i class="fas fa-calendar-days"></i>
-                                            Date: <?php echo htmlspecialchars(date('F j, Y, g:i a', strtotime($entry['created_at']))); ?>
+                                            Date: <?php echo htmlspecialchars(date('F j, Y, g:i a', strtotime($entry['submitted_at']))); ?>
                                         </div>
                                     </div>
                                 </div>

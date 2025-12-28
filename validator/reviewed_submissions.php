@@ -91,20 +91,23 @@ try {
         SELECT COUNT(*) as total
         FROM submissions s
         JOIN users u ON s.user_id = u.user_id
-        WHERE s.barangay_id = :barangay_id AND s.status IN ('approved', 'rejected')
-        AND (:search = '' OR u.username LIKE :search OR u.email LIKE :search)
+        WHERE s.barangay_id = :barangay_id
+          AND s.status IN ('approved', 'rejected')
     ";
+    $count_params = [
+        ':barangay_id' => (int)$user['barangay_id'],
+    ];
+    if ($search_query !== '') {
+        $count_query .= " AND (u.username LIKE :search_username OR u.email LIKE :search_email)";
+        $like = "%{$search_query}%";
+        $count_params[':search_username'] = $like;
+        $count_params[':search_email'] = $like;
+    }
     if ($status_filter !== 'all') {
         $count_query .= " AND s.status = :status";
-    }
-    $count_stmt = $pdo->prepare($count_query);
-    $count_params = [
-        ':barangay_id' => $user['barangay_id'],
-        ':search' => $search_query ? "%$search_query%" : ''
-    ];
-    if ($status_filter !== 'all') {
         $count_params[':status'] = $status_filter;
     }
+    $count_stmt = $pdo->prepare($count_query);
     $count_stmt->execute($count_params);
     $total_items = $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
     $total_pages = max(1, ceil($total_items / $items_per_page));
@@ -115,30 +118,29 @@ try {
                s.submission_notes, s.flagged, s.rejection_reason, u.username
         FROM submissions s
         JOIN users u ON s.user_id = u.user_id
-        WHERE s.barangay_id = :barangay_id AND s.status IN ('approved', 'rejected')
-        AND (:search = '' OR u.username LIKE :search OR u.email LIKE :search)
+        WHERE s.barangay_id = :barangay_id
+          AND s.status IN ('approved', 'rejected')
     ";
+    if ($search_query !== '') {
+        $query .= " AND (u.username LIKE :search_username OR u.email LIKE :search_email)";
+    }
     if ($status_filter !== 'all') {
         $query .= " AND s.status = :status";
     }
-    $query .= " GROUP BY s.submission_id ORDER BY s.submitted_at DESC LIMIT :limit OFFSET :offset";
+    $query .= " ORDER BY s.submitted_at DESC LIMIT :limit OFFSET :offset";
+
     $stmt = $pdo->prepare($query);
-    $params = [
-        ':barangay_id' => $user['barangay_id'],
-        ':search' => $search_query ? "%$search_query%" : '',
-        ':limit' => $items_per_page,
-        ':offset' => $offset
-    ];
-    if ($status_filter !== 'all') {
-        $params[':status'] = $status_filter;
+    $stmt->bindValue(':barangay_id', (int)$user['barangay_id'], PDO::PARAM_INT);
+    if ($search_query !== '') {
+        $like = "%{$search_query}%";
+        $stmt->bindValue(':search_username', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':search_email', $like, PDO::PARAM_STR);
     }
-    $stmt->bindValue(':barangay_id', $user['barangay_id'], PDO::PARAM_INT);
-    $stmt->bindValue(':search', $search_query ? "%$search_query%" : '', PDO::PARAM_STR);
-    $stmt->bindValue(':limit', $items_per_page, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     if ($status_filter !== 'all') {
         $stmt->bindValue(':status', $status_filter, PDO::PARAM_STR);
     }
+    $stmt->bindValue(':limit', (int)$items_per_page, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
     $stmt->execute();
     $reviewed_submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

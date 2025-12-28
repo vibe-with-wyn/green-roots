@@ -44,6 +44,24 @@ try {
         ':submission_id' => $submission_id
     ]);
 
+    // Update the activity record using submission_id for precise targeting
+    $stmt = $pdo->prepare("
+        UPDATE activities 
+        SET status = :status,
+            eco_points = :eco_points
+        WHERE submission_id = :submission_id 
+        AND user_id = :user_id 
+        AND activity_type = 'submission'
+        LIMIT 1
+    ");
+    
+    $stmt->execute([
+        ':status' => $status,
+        ':eco_points' => $status === 'approved' ? $eco_points : null,
+        ':submission_id' => $submission_id,
+        ':user_id' => $user_id
+    ]);
+
     // If approved, update user's eco_points and trees_planted
     if ($status === 'approved' && $user_id && $eco_points > 0) {
         $stmt = $pdo->prepare("
@@ -62,9 +80,16 @@ try {
     $pdo->commit();
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    $pdo->rollBack();
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log("Database error in update_submission.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log("Error in update_submission.php: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>

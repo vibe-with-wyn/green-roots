@@ -1,5 +1,7 @@
 # Green Roots - Features Documentation
 
+> 🌐 **See it in action**: [https://green-roots.is-great.net](https://green-roots.is-great.net)
+
 This document provides detailed explanations of each feature in the Green Roots application, describing both user-facing functionality and behind-the-scenes mechanics.
 
 ## Table of Contents

@@ -226,4 +226,16 @@ For detailed database setup instructions, see [INSTALLATION.md](INSTALLATION.md)
 
 ---
 
+## Production Environment
+
+The application is currently deployed on InfinityFree with the following architecture:
+
+- **Web Server**: Apache (managed by InfinityFree)
+- **Database**: MySQL 5.7+ (Remote access via phpMyAdmin)
+- **PHP Version**: 8.x
+- **SSL/TLS**: Free SSL certificate enabled
+- **Domain**: green-roots.is-great.net
+
+---
+
 **Note**: For detailed feature descriptions, see [FEATURES.md](FEATURES.md). For API documentation, see [API.md](API.md).

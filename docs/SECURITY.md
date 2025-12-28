@@ -481,6 +481,67 @@ I will:
 
 **Note**: As a solo developer, response times may vary, but security issues are treated as high priority.
 
+# Security Guidelines
+
+## Pre-Deployment Security
+
+### 1. Database Security
+- Use strong database passwords
+- Never commit credentials to version control
+- Limit database user privileges
+- Regularly backup database
+
+### 2. File Protection
+- Keep sensitive files outside `htdocs`
+- Use `.htaccess` to block direct access
+- Validate all file uploads
+- Sanitize user inputs
+
+### 3. Session Security
+- Use secure session handling
+- Implement session timeout
+- Regenerate session IDs on login
+- Use HTTPS only (when available)
+
+### 4. SQL Injection Prevention
+- Always use prepared statements
+- Never concatenate SQL queries
+- Validate and sanitize inputs
+- Use parameterized queries
+
+### 5. XSS Prevention
+- Use `htmlspecialchars()` for output
+- Validate input data types
+- Implement Content Security Policy
+- Escape JavaScript variables
+
+## InfinityFree Specific Security
+
+### Limitations to Consider
+1. **No SSL on subdomains** - Use custom domain for SSL
+2. **No .htpasswd support** - Implement application-level auth
+3. **Limited file permissions** - Use application-level checks
+4. **No shell access** - All management via FTP/control panel
+
+### Recommended Practices
+1. Enable CloudFlare (free SSL)
+2. Use strong session management
+3. Implement rate limiting in PHP
+4. Log security events to database
+5. Regular security audits
+
+## Production Checklist
+- [ ] Change all default passwords
+- [ ] Enable error logging (not display)
+- [ ] Set `$is_production = true`
+- [ ] Remove debug code
+- [ ] Validate all user inputs
+- [ ] Implement CSRF protection
+- [ ] Set secure cookie flags
+- [ ] Regular backup schedule
+- [ ] Monitor access logs
+- [ ] Keep dependencies updated
+
 ## Security Checklist
 
 ### Pre-Deployment
@@ -511,3 +572,18 @@ I will:
 ---
 
 **Note**: This document reflects the current security implementation. For a complete system overview, see [ARCHITECTURE.md](ARCHITECTURE.md). For feature details, see [FEATURES.md](FEATURES.md).
+
+> 🌐 **Production Instance**: [https://green-roots.is-great.net](https://green-roots.is-great.net)  
+> 🔒 **Security Status**: HTTPS enabled, production-ready security measures active
+
+## Production Security Measures
+
+The live application at https://green-roots.is-great.net implements the following security features:
+
+- ✅ **SSL/HTTPS encryption** for all traffic
+- ✅ **Secure session management** with HTTP-only cookies
+- ✅ **SQL injection protection** via PDO prepared statements
+- ✅ **XSS prevention** through output sanitization
+- ✅ **Password hashing** using PHP's password_hash()
+- ✅ **CSRF protection** on all forms
+- ✅ **Role-based access control** (User, Validator, Admin)

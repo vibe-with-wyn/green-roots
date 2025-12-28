@@ -1,5 +1,11 @@
 # Green Roots - Installation Guide
 
+> 🌐 **LIVE DEMO**: The application is deployed and accessible at [https://green-roots.is-great.net](https://green-roots.is-great.net)
+
+> **Note**: This guide is for local development or custom deployment. For the production instance, visit the live link above.
+
+---
+
 This guide will help you set up the Green Roots application on your local development environment.
 
 ## Table of Contents
@@ -359,3 +365,72 @@ For development purposes:
 ---
 
 **Note**: This is a development setup guide. For production deployment, additional security measures and server configuration are required.
+
+# Green Roots - Deployment Guide
+
+This guide will help you deploy the Green Roots application on InfinityFree hosting.
+
+## Prerequisites
+- InfinityFree hosting account
+- Database created in InfinityFree control panel
+- FTP client (FileZilla recommended)
+
+## Deployment Steps
+
+### 1. Prepare Database
+1. Log into InfinityFree control panel
+2. Go to MySQL Databases
+3. Create database: `if0_40752096_greenroots_db`
+4. Import `database/greenroots_db.sql` using phpMyAdmin
+
+### 2. Upload Files
+Using FTP client, upload files to your InfinityFree account:
+- Upload all files from the `green-roots` folder (except `database` folder and `uploads` folder if you want to keep it empty)
+- Set file permissions: `755` for folders, `644` for files
+
+### 3. Configure Database Connection
+1. Edit `includes/config.php`:
+   - Set `$host = 'sqlXXX.epizy.com';` (replace with your server name)
+   - Set `$dbname = 'if0_40752096_greenroots_db';`
+   - Set `$username = 'if0_40752096';` (your InfinityFree username)
+   - Set `$password = 'your_password';` (your InfinityFree password)
+
+2. Save changes.
+
+### 4. Access the Application
+- Open your web browser
+- Navigate to your InfinityFree domain: `http://yourdomain.epizy.com/green-roots/index.php`
+
+### 5. Complete Setup
+- Register a new user account
+- Log in and verify functionality
+- Check email notifications (if configured)
+
+## Troubleshooting Deployment Issues
+
+- **Error 500**: Check `.htaccess` file for misconfigurations.
+- **Database connection errors**: Recheck database credentials in `config.php`.
+- **File not found errors**: Ensure files are uploaded in the correct directory.
+- **Permission denied errors**: Set correct file permissions (755 for folders, 644 for files).
+
+## Next Steps After Deployment
+
+1. **Monitor Application**:
+   - Regularly check for errors in the control panel
+   - Monitor database size and optimize if necessary
+
+2. **Backup Data**:
+   - Regularly backup your database and files
+   - Use phpMyAdmin export feature for database backups
+
+3. **Update Application**:
+   - Pull latest changes from the GitHub repository
+   - Test updates in a development environment before deploying
+
+4. **Engage Users**:
+   - Promote the application to your target audience
+   - Gather feedback and improve the application
+
+---
+
+**Note**: This is a deployment guide for InfinityFree hosting. For other hosting providers, steps may vary. Always refer to your hosting provider's documentation for specific instructions.

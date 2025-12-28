@@ -743,3 +743,14 @@ All files implement the following security measures:
 ---
 
 **Note**: For feature descriptions, see [FEATURES.md](FEATURES.md). For security details, see [SECURITY.md](SECURITY.md).
+
+# API Documentation
+
+> 🌐 **Production Base URL**: https://green-roots.is-great.net
+
+## Base URLs
+
+- **Production**: `https://green-roots.is-great.net`
+- **Local Development**: `http://localhost/green-roots`
+
+---

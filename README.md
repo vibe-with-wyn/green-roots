@@ -1,5 +1,18 @@
 # Green Roots 🌱
 
+> 🌐 **LIVE APPLICATION**: [https://green-roots.is-great.net](https://green-roots.is-great.net)  
+> 🚀 **Status**: Deployed and running on InfinityFree hosting
+
+## Deployment Information
+
+The Green Roots application is currently **live and accessible** at:
+- **Production URL**: https://green-roots.is-great.net
+- **Hosting Provider**: InfinityFree
+- **Database**: MySQL (Remote access via phpMyAdmin)
+- **SSL/HTTPS**: Enabled with free SSL certificate
+
+---
+
 Green Roots is a web application designed to encourage tree planting and promote environmental protection. This app allows users to participate in tree planting activities, earn points, connect with community events, compete with others through rankings, and redeem rewards, all contributing to a greener planet.
 
 ## Table of Contents

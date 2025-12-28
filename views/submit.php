@@ -319,20 +319,24 @@ try {
                 'flagged' => $is_flagged
             ]);
 
-            // Log the activity with detailed info
-            $description = "Submitted $trees_planted trees in $barangay_name. $proximity_note";
+            $submission_id = (int)$pdo->lastInsertId();
+
+            // Insert the activity row WITH submission_id populated
             $stmt = $pdo->prepare("
-                INSERT INTO activities (
-                    user_id, description, activity_type, trees_planted, location, status, created_at
-                ) VALUES (
-                    :user_id, :description, 'submission', :trees_planted, :location, 'pending', NOW()
-                )
+                INSERT INTO activities (user_id, submission_id, description, trees_planted, location, status, eco_points, activity_type, created_at)
+                VALUES (:user_id, :submission_id, :description, :trees_planted, :location, 'pending', NULL, 'submission', NOW())
             ");
+
+            // Build description/location the same way you currently do (keep consistent with your app)
+            $location_name = $barangay_name;
+            $description = "Submitted $trees_planted trees" . ($location_name ? " in $location_name." : ".");
+
             $stmt->execute([
-                'user_id' => $user_id,
-                'description' => $description,
-                'trees_planted' => $trees_planted,
-                'location' => $barangay_name
+                ':user_id' => (int)$user_id,
+                ':submission_id' => $submission_id,
+                ':description' => $description,
+                ':trees_planted' => (int)$trees_planted,
+                ':location' => $location_name,
             ]);
 
             // Commit transaction

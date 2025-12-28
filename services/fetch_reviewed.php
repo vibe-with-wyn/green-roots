@@ -16,7 +16,8 @@ $user_id = $_SESSION['user_id'];
 try {
     $barangay_id = $_GET['barangay_id'] ?? null;
     $status = $_GET['status'] ?? 'all';
-    $search = $_GET['search'] ?? '';
+    $search = trim($_GET['search'] ?? '');
+
     if (!$barangay_id) {
         echo json_encode(['error' => 'Barangay ID is required']);
         exit;
@@ -27,32 +28,35 @@ try {
                s.submission_notes, s.flagged, s.rejection_reason, u.username
         FROM submissions s
         JOIN users u ON s.user_id = u.user_id
-        WHERE s.barangay_id = :barangay_id AND s.status IN ('approved', 'rejected')
-        AND (:search = '' OR u.username LIKE :search OR u.email LIKE :search)
+        WHERE s.barangay_id = :barangay_id
+          AND s.status IN ('approved', 'rejected')
     ";
+    $params = [
+        ':barangay_id' => (int)$barangay_id,
+    ];
+
+    if ($search !== '') {
+        $query .= " AND (u.username LIKE :search_username OR u.email LIKE :search_email)";
+        $like = "%{$search}%";
+        $params[':search_username'] = $like;
+        $params[':search_email'] = $like;
+    }
+
     if ($status !== 'all') {
         $query .= " AND s.status = :status";
-    }
-    $query .= " GROUP BY s.submission_id ORDER BY s.submitted_at DESC";
-    
-    $stmt = $pdo->prepare($query);
-    $params = [
-        ':barangay_id' => $barangay_id,
-        ':search' => $search ? "%$search%" : ''
-    ];
-    if ($status !== 'all') {
         $params[':status'] = $status;
     }
+
+    $query .= " ORDER BY s.submitted_at DESC";
+
+    $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $reviewed_submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $base_points_per_tree = 50;
     foreach ($reviewed_submissions as &$submission) {
         $total_base_points = $submission['trees_planted'] * $base_points_per_tree;
-        $buffer_multiplier = 1.2;
-        $reward_multiplier = 1.1;
-        $buffered_points = $total_base_points * $buffer_multiplier;
-        $eco_points = $buffered_points * $reward_multiplier;
+        $eco_points = ($total_base_points * 1.2) * 1.1;
         $submission['eco_points'] = round($eco_points);
         if ($submission['photo_data']) {
             $submission['photo_data'] = base64_encode($submission['photo_data']);

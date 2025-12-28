@@ -72,12 +72,17 @@ try {
     // Fetch stats
     $stmt = $pdo->prepare("
         SELECT 
-            (SELECT COUNT(*) FROM users WHERE barangay_id = :barangay_id AND role = 'user') as user_count,
-            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id AND status = 'pending') as pending_count,
-            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id AND status = 'approved') as approved_count,
-            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id AND flagged = 1) as flagged_count
+            (SELECT COUNT(*) FROM users WHERE barangay_id = :barangay_id_users AND role = 'user') as user_count,
+            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id_pending AND status = 'pending') as pending_count,
+            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id_approved AND status = 'approved') as approved_count,
+            (SELECT COUNT(*) FROM submissions WHERE barangay_id = :barangay_id_flagged AND flagged = 1) as flagged_count
     ");
-    $stmt->execute(['barangay_id' => $user['barangay_id']]);
+    $stmt->execute([
+        'barangay_id_users' => $user['barangay_id'],
+        'barangay_id_pending' => $user['barangay_id'],
+        'barangay_id_approved' => $user['barangay_id'],
+        'barangay_id_flagged' => $user['barangay_id'],
+    ]);
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Fetch the most recent submission

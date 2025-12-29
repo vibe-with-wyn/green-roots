@@ -154,15 +154,15 @@ try {
     }
 
     // Calculate eco points for each submission based on effort (trees planted)
-    $base_points_per_tree = 50; // Base eco points per tree for planting effort
+    $base_points_per_tree = 50;
     foreach ($pending_submissions as &$submission) {
         $total_base_points = $submission['trees_planted'] * $base_points_per_tree;
-        $buffer_multiplier = 1.2; // 20% buffer for fairness
-        $reward_multiplier = 1.1; // 10% additional reward
-        $buffered_points = $total_base_points * $buffer_multiplier;
-        $eco_points = $buffered_points * $reward_multiplier;
+        $buffer_multiplier = 1.2;
+        $reward_multiplier = 1.1;
+        $eco_points = ($total_base_points * $buffer_multiplier) * $reward_multiplier;
         $submission['eco_points'] = round($eco_points);
     }
+    unset($submission); // IMPORTANT: prevent last-element reference corruption in later foreach loops
 
 } catch (PDOException $e) {
     $error_message = "Error: " . $e->getMessage();
@@ -885,48 +885,50 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($pending_submissions)): ?>
-                            <tr>
-                                <td colspan="11" style="text-align: center;">No pending submissions available.</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php
-                            // Ensure no duplicates by tracking submission IDs
-                            $displayed_submission_ids = [];
-                            foreach ($pending_submissions as $submission):
-                                if (in_array($submission['submission_id'], $displayed_submission_ids)) {
-                                    continue; // Skip duplicates
-                                }
-                                $displayed_submission_ids[] = $submission['submission_id'];
-                            ?>
-                                <tr data-submission-id="<?php echo htmlspecialchars($submission['submission_id']); ?>">
-                                    <td><?php echo htmlspecialchars($submission['submission_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($submission['username'] ?? 'Unknown User'); ?></td>
-                                    <td><?php echo htmlspecialchars(date('M d, Y H:i', strtotime($submission['submitted_at']))); ?></td>
-                                    <td>
-                                        <a href="https://www.openstreetmap.org/?mlat=<?php echo htmlspecialchars($submission['latitude'] ?? '0'); ?>&mlon=<?php echo htmlspecialchars($submission['longitude'] ?? '0'); ?>&zoom=15" target="_blank" class="location-link">
-                                            <?php echo htmlspecialchars($submission['latitude'] ?? 'N/A'); ?>, <?php echo htmlspecialchars($submission['longitude'] ?? 'N/A'); ?>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <?php if ($submission['photo_data']): ?>
-                                            <img src="data:image/jpeg;base64,<?php echo base64_encode($submission['photo_data']); ?>" alt="Submission Photo" onclick="openImageModal(this.src)">
-                                        <?php else: ?>
-                                            No Photo
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($submission['trees_planted']); ?></td>
-                                    <td><?php echo htmlspecialchars($submission['eco_points']); ?></td>
-                                    <td><?php echo htmlspecialchars($submission['submission_notes'] ?? 'N/A'); ?></td>
-                                    <td class="status"><?php echo htmlspecialchars(ucfirst($submission['status'])); ?></td>
-                                    <td><?php if ($submission['flagged']): ?><i class="fas fa-flag flag-icon"></i><?php endif; ?></td>
-                                    <td>
-                                        <button class="action-btn" onclick="openActionModal(<?php echo htmlspecialchars($submission['submission_id']); ?>, <?php echo htmlspecialchars($submission['user_id'] ?? 'null'); ?>, <?php echo htmlspecialchars($submission['eco_points']); ?>, <?php echo htmlspecialchars($submission['trees_planted']); ?>)">Actions</button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
+<?php if (empty($pending_submissions)): ?>
+    <tr>
+        <td colspan="11" style="text-align: center;">No pending submissions available.</td>
+    </tr>
+<?php else: ?>
+    <?php foreach ($pending_submissions as $submission): ?>
+        <tr data-submission-id="<?php echo htmlspecialchars($submission['submission_id']); ?>">
+            <td><?php echo htmlspecialchars($submission['submission_id']); ?></td>
+            <td><?php echo htmlspecialchars($submission['username'] ?? 'Unknown User'); ?></td>
+            <td><?php echo htmlspecialchars(date('M d, Y H:i', strtotime($submission['submitted_at']))); ?></td>
+            <td>
+                <a href="https://www.openstreetmap.org/?mlat=<?php echo htmlspecialchars($submission['latitude'] ?? '0'); ?>&mlon=<?php echo htmlspecialchars($submission['longitude'] ?? '0'); ?>&zoom=15"
+                   target="_blank" class="location-link">
+                    <?php echo htmlspecialchars($submission['latitude'] ?? 'N/A'); ?>, <?php echo htmlspecialchars($submission['longitude'] ?? 'N/A'); ?>
+                </a>
+            </td>
+            <td>
+                <?php if (!empty($submission['photo_data'])): ?>
+                    <img src="data:image/jpeg;base64,<?php echo base64_encode($submission['photo_data']); ?>"
+                         alt="Submission Photo" onclick="openImageModal(this.src)">
+                <?php else: ?>
+                    No Photo
+                <?php endif; ?>
+            </td>
+            <td><?php echo htmlspecialchars($submission['trees_planted']); ?></td>
+            <td><?php echo htmlspecialchars($submission['eco_points']); ?></td>
+            <td><?php echo htmlspecialchars($submission['submission_notes'] ?? 'N/A'); ?></td>
+            <td class="status"><?php echo htmlspecialchars(ucfirst($submission['status'])); ?></td>
+            <td><?php if (!empty($submission['flagged'])): ?><i class="fas fa-flag flag-icon"></i><?php endif; ?></td>
+            <td>
+                <button class="action-btn"
+                        onclick="openActionModal(
+                            <?php echo (int)$submission['submission_id']; ?>,
+                            <?php echo isset($submission['user_id']) ? (int)$submission['user_id'] : 'null'; ?>,
+                            <?php echo (int)$submission['eco_points']; ?>,
+                            <?php echo (int)$submission['trees_planted']; ?>
+                        )">
+                    Actions
+                </button>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+<?php endif; ?>
+</tbody>
                 </table>
             </div>
             <div class="pagination">

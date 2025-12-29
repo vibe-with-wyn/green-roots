@@ -47,6 +47,9 @@ This document provides detailed explanations of each feature in the Green Roots 
 - Photos are validated for format (JPG/PNG), size (<10MB), resolution (≥800x600 pixels), and location data. A hash prevents duplicates.
 - Validators review submissions, updating points, tree counts, and rankings upon approval.
 
+Validator performance note:
+- Validator tables load submission photos on-demand (streamed per row) instead of embedding base64 blobs in list views, improving page load speed for large datasets.
+
 ### Designated Planting Site Information
 
 **What It Does**: Displays community-specific planting locations to aid planning.

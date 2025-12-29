@@ -84,16 +84,14 @@ try {
         $search_query = $_SESSION['validator_search']; // Use persisted search query
     }
 
-    // Debug: Log search query
-    error_log("Search Query: " . ($search_query ?: 'None'));
+    // Debug logging removed for performance
 
     // Search and pagination setup
     $items_per_page = 11;
     $current_page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $offset = ($current_page - 1) * $items_per_page;
 
-    // Debug: Log pagination details
-    error_log("Pagination - Current Page: $current_page, Offset: $offset, Items per Page: $items_per_page");
+    // Debug logging removed for performance
 
     // Count total pending submissions
     $count_query = "
@@ -116,12 +114,12 @@ try {
     $total_items = $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
     $total_pages = max(1, ceil($total_items / $items_per_page));
 
-    // Debug: Log total items and pages
-    error_log("Total Items: $total_items, Total Pages: $total_pages");
+    // Debug logging removed for performance
 
     // Fetch pending submissions
+    // NOTE: Do NOT select s.photo_data here (longblob). Photos are served via a dedicated endpoint for better performance.
     $query = "
-        SELECT s.submission_id, s.user_id, s.trees_planted, s.photo_data, s.latitude, s.longitude, s.submitted_at,
+        SELECT s.submission_id, s.user_id, s.trees_planted, s.latitude, s.longitude, s.submitted_at,
                s.status, s.submission_notes, s.flagged, u.username, u.email
         FROM submissions s
         LEFT JOIN users u ON s.user_id = u.user_id
@@ -144,14 +142,7 @@ try {
     $stmt->execute();
     $pending_submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Debug: Log the retrieved submissions
-    $submission_ids = array_column($pending_submissions, 'submission_id');
-    error_log("Retrieved submission IDs: " . json_encode($submission_ids));
-
-    // Debug: Log user data for retrieved submissions
-    foreach ($pending_submissions as $submission) {
-        error_log("Submission ID: {$submission['submission_id']}, User ID: {$submission['user_id']}, Username: " . ($submission['username'] ?? 'NULL') . ", Email: " . ($submission['email'] ?? 'NULL'));
-    }
+    // Debug logging removed for performance
 
     // Calculate eco points for each submission based on effort (trees planted)
     $base_points_per_tree = 50;
@@ -902,12 +893,12 @@ try {
                 </a>
             </td>
             <td>
-                <?php if (!empty($submission['photo_data'])): ?>
-                    <img src="data:image/jpeg;base64,<?php echo base64_encode($submission['photo_data']); ?>"
-                         alt="Submission Photo" onclick="openImageModal(this.src)">
-                <?php else: ?>
-                    No Photo
-                <?php endif; ?>
+                <img
+                    src="../services/submission_photo.php?submission_id=<?php echo (int)$submission['submission_id']; ?>"
+                    alt="Submission Photo"
+                    loading="lazy"
+                    onclick="openImageModal(this.src)"
+                >
             </td>
             <td><?php echo htmlspecialchars($submission['trees_planted']); ?></td>
             <td><?php echo htmlspecialchars($submission['eco_points']); ?></td>

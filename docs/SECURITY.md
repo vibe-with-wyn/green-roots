@@ -21,6 +21,9 @@ This document outlines the security features and best practices implemented in t
 
 Green Roots implements multiple layers of security to protect user data and prevent common web vulnerabilities. The application follows industry-standard security practices while acknowledging areas for future improvement.
 
+Note on documentation:
+- Do not store or publish plaintext passwords (including demo/test accounts) inside the repository documentation. Share credentials out-of-band or set/reset them in the database for each deployment.
+
 ## Authentication & Authorization
 
 ### User Authentication
@@ -58,6 +61,12 @@ if ($_SESSION['role'] !== 'eco_validator') {
     exit;
 }
 ```
+
+### Media Access (Submission Photos)
+
+Validator pages load submission photos via a dedicated endpoint (`services/submission_photo.php`). This endpoint enforces:
+1. Role restriction (`eco_validator` only)
+2. Barangay scoping (validator can only access submissions in their assigned barangay)
 
 ## Password Security
 

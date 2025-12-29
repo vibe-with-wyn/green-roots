@@ -532,6 +532,7 @@ This document provides detailed technical information about each file's function
   - **Approve**: Updates status, adds points/trees to user, logs validator ID and timestamp
   - **Reject**: Requires reason, updates status with rejection reason
 - **Display**: Table with submission details, photos, locations
+- **Performance Note (Photos)**: Photos are loaded on-demand via `services/submission_photo.php?submission_id=...` to avoid fetching/base64-encoding `submissions.photo_data` in list queries.
 - **Pagination**: 11 items per page
 - **Flagging**: Displays flag icon if flagged
 
@@ -546,6 +547,7 @@ This document provides detailed technical information about each file's function
 
 **Services**:
 - `update_submission.php` - Handles approval/rejection
+- `submission_photo.php` - Streams submission photos on-demand
 
 ---
 
@@ -560,10 +562,11 @@ This document provides detailed technical information about each file's function
   - Search by username or email
   - Filter by status (all, approved, rejected)
   - Persistence across pages
-- **Real-Time Updates**: AJAX polling every 2 seconds
+- **Updates**: Uses AJAX fetching for search/filter updates (no aggressive polling by default)
 - **Display**: Table with submission details, photos, rejection reasons
 - **Pagination**: 10 items per page
 - **Photo Modal**: Clickable thumbnails to enlarge
+ - **Performance Note (Photos)**: Avoids embedding base64 images or returning photo blobs over JSON; photos are streamed via `services/submission_photo.php`.
 
 **External Dependencies**:
 - Font Awesome (CDN)
@@ -575,7 +578,8 @@ This document provides detailed technical information about each file's function
 - `barangays` - Location data
 
 **Services**:
-- `fetch_reviewed.php` - Real-time data updates
+- `fetch_reviewed.php` - Data updates
+- `submission_photo.php` - Streams submission photos on-demand
 
 ---
 
@@ -671,12 +675,15 @@ This document provides detailed technical information about each file's function
 - Accepts JSON input via POST
 - Validates input (`submission_id`, `status`, `validated_by`, `validated_at`)
 - Updates `submissions` table
+- Updates the existing `activities` row for the submission (syncs status + eco points)
+- Does not create new activity rows during validation
 - For approved submissions: Updates user's `eco_points` and `trees_planted`
 - Uses PDO transactions for data consistency
 - Returns JSON response
 
 **Database Tables**:
 - `submissions` - Status updates
+- `activities` - Status/eco points sync for submission activity
 - `users` - Points and trees updates
 
 **Security Features**:
@@ -688,7 +695,7 @@ This document provides detailed technical information about each file's function
 
 ### services/fetch_reviewed.php
 
-**Purpose**: Provides real-time data for reviewed submissions via AJAX.
+**Purpose**: Provides data for reviewed submissions via AJAX.
 
 **Functionalities**:
 - Authentication check (`eco_validator` role)
@@ -696,12 +703,26 @@ This document provides detailed technical information about each file's function
 - Retrieves approved/rejected submissions
 - Filters by status and search query
 - Calculates eco points
-- Encodes photo data as base64
+- Does not return photo blobs/base64 in JSON (photos are requested separately)
 - Returns JSON response
 
 **Database Tables**:
 - `submissions` - Submission data
 - `users` - Submitter data
+
+---
+
+### services/submission_photo.php
+
+**Purpose**: Streams a submission photo blob for validator pages.
+
+**Functionalities**:
+- Restricts access to the `eco_validator` role
+- Enforces barangay-level access (validator can only view photos for submissions in their barangay)
+- Returns the binary image with a best-effort `Content-Type`
+
+**Query Parameters**:
+- `submission_id` (required)
 
 ---
 

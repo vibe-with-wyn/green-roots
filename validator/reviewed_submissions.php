@@ -112,15 +112,16 @@ try {
     $total_items = $count_stmt->fetch(PDO::FETCH_ASSOC)['total'];
     $total_pages = max(1, ceil($total_items / $items_per_page));
 
-    // Fetch reviewed submissions
-    $query = "
-        SELECT s.submission_id, s.user_id, s.trees_planted, s.photo_data, s.latitude, s.longitude, s.submitted_at, s.status,
-               s.submission_notes, s.flagged, s.rejection_reason, u.username
-        FROM submissions s
-        JOIN users u ON s.user_id = u.user_id
-        WHERE s.barangay_id = :barangay_id
-          AND s.status IN ('approved', 'rejected')
-    ";
+        // Fetch reviewed submissions
+        // NOTE: Do NOT select s.photo_data here (longblob). Photos are served via a dedicated endpoint for better performance.
+        $query = "
+         SELECT s.submission_id, s.user_id, s.trees_planted, s.latitude, s.longitude, s.submitted_at, s.status,
+             s.submission_notes, s.flagged, s.rejection_reason, u.username
+         FROM submissions s
+         JOIN users u ON s.user_id = u.user_id
+         WHERE s.barangay_id = :barangay_id
+           AND s.status IN ('approved', 'rejected')
+        ";
     if ($search_query !== '') {
         $query .= " AND (u.username LIKE :search_username OR u.email LIKE :search_email)";
     }
@@ -154,6 +155,7 @@ try {
         $eco_points = $buffered_points * $reward_multiplier;
         $submission['eco_points'] = round($eco_points);
     }
+    unset($submission); // prevent last-element reference corruption in later foreach loops
 
 } catch (PDOException $e) {
     $error_message = "Error: " . $e->getMessage();
@@ -796,11 +798,13 @@ try {
                                         </a>
                                     </td>
                                     <td>
-                                        <?php if ($submission['photo_data']): ?>
-                                            <img src="data:image/jpeg;base64,<?php echo base64_encode($submission['photo_data']); ?>" alt="Submission Photo" onclick="openImageModal(this.src)">
-                                        <?php else: ?>
-                                            No Photo
-                                        <?php endif; ?>
+                                        <img
+                                            src="../services/submission_photo.php?submission_id=<?php echo (int)$submission['submission_id']; ?>"
+                                            alt="Submission Photo"
+                                            loading="lazy"
+                                            onclick="openImageModal(this.src)"
+                                            onerror="this.replaceWith(document.createTextNode('No Photo'))"
+                                        >
                                     </td>
                                     <td><?php echo htmlspecialchars($submission['trees_planted']); ?></td>
                                     <td><?php echo htmlspecialchars($submission['eco_points']); ?></td>
@@ -893,7 +897,7 @@ try {
             window.location.href = `reviewed_submissions.php?page=1&status=${status}`;
         }
 
-        // AJAX for real-time updates
+        // AJAX for real-time updates (disabled by default for performance)
         function updateReviewedTable() {
             const status = document.querySelector('#statusFilter').value;
             const search = document.querySelector('#searchField').value;
@@ -917,7 +921,7 @@ try {
                                 <td>${submission.username}</td>
                                 <td>${new Date(submission.submitted_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</td>
                                 <td><a href="https://www.openstreetmap.org/?mlat=${submission.latitude || 0}&mlon=${submission.longitude || 0}&zoom=15" target="_blank" class="location-link">${submission.latitude || 'N/A'}, ${submission.longitude || 'N/A'}</a></td>
-                                <td>${submission.photo_data ? `<img src="data:image/jpeg;base64,${submission.photo_data}" alt="Submission Photo" onclick="openImageModal(this.src)">` : 'No Photo'}</td>
+                                <td><img src="../services/submission_photo.php?submission_id=${submission.submission_id}" alt="Submission Photo" loading="lazy" onclick="openImageModal(this.src)" onerror="this.replaceWith(document.createTextNode('No Photo'))"></td>
                                 <td>${submission.trees_planted}</td>
                                 <td>${submission.eco_points}</td>
                                 <td>${submission.submission_notes || 'N/A'}</td>
@@ -932,10 +936,8 @@ try {
                 .catch(error => console.error('Error fetching data:', error));
         }
 
-        // Update table every 5 seconds
-        setInterval(updateReviewedTable, 2000);
-        // Initial load
-        updateReviewedTable();
+        // NOTE: Polling disabled to keep the page fast and keep pagination consistent.
+        // If you want manual refresh later, you can call updateReviewedTable() from a button.
 
         // Image Modal functionality
         function openImageModal(src) {

@@ -23,14 +23,15 @@ try {
         exit;
     }
 
-    $query = "
-        SELECT s.submission_id, s.user_id, s.trees_planted, s.photo_data, s.latitude, s.longitude, s.submitted_at, s.status,
-               s.submission_notes, s.flagged, s.rejection_reason, u.username
-        FROM submissions s
-        JOIN users u ON s.user_id = u.user_id
-        WHERE s.barangay_id = :barangay_id
-          AND s.status IN ('approved', 'rejected')
-    ";
+        // NOTE: Do NOT select s.photo_data here (longblob). Photos are served via a dedicated endpoint.
+        $query = "
+         SELECT s.submission_id, s.user_id, s.trees_planted, s.latitude, s.longitude, s.submitted_at, s.status,
+             s.submission_notes, s.flagged, s.rejection_reason, u.username
+         FROM submissions s
+         JOIN users u ON s.user_id = u.user_id
+         WHERE s.barangay_id = :barangay_id
+           AND s.status IN ('approved', 'rejected')
+        ";
     $params = [
         ':barangay_id' => (int)$barangay_id,
     ];
@@ -58,10 +59,8 @@ try {
         $total_base_points = $submission['trees_planted'] * $base_points_per_tree;
         $eco_points = ($total_base_points * 1.2) * 1.1;
         $submission['eco_points'] = round($eco_points);
-        if ($submission['photo_data']) {
-            $submission['photo_data'] = base64_encode($submission['photo_data']);
-        }
     }
+    unset($submission);
 
     header('Content-Type: application/json');
     echo json_encode($reviewed_submissions);

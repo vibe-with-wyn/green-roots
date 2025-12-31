@@ -116,9 +116,9 @@ Comprehensive documentation is available in the `docs/` folder:
 
 For demo/testing, you can use the following users per role:
 
-- User: `user` Password: User@0001
-- Validator: `validator` Password: Validator@0001
-- Admin: `admin` Password: Admin@Greenroot1
+- User: `user` Password: `User@0001`
+- Validator: `validator` Password: `Validator@0001`
+- Admin: `admin` Password: `Admin@Greenroot1`
 
 For security reasons, this repository does not store or publish plaintext passwords in documentation. Set/reset these passwords in your database (or create equivalent accounts locally) before testing.
 
